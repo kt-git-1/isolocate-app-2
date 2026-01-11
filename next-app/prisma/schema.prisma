@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum JobStatus {
+  queued
+  running
+  succeeded
+  failed
+}
+
+model AnalysisRun {
+  id          String    @id @default(cuid())
+  status      JobStatus @default(queued)
+  inputJson   Json
+  resultJson  Json?
+  errorText   String?
+  referenceDatasetId String
+  referenceDataset   ReferenceDataset @relation(fields: [referenceDatasetId], references: [id])
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status, createdAt])
+}
+
+model ReferenceDataset {
+  id          String   @id @default(cuid())
+  name        String   // png-modern など
+  version     String   // v1, 2026-01-11 など
+  description String?
+  csvPath     String   // /data/reference/png-modern/v1/dataset.csv
+  checksum    String?  // SHA256（任意）
+  createdAt   DateTime @default(now())
+
+  analysisRuns AnalysisRun[]
+
+  @@unique([name, version])
+}
