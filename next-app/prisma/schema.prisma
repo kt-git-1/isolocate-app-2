@@ -1,33 +1,42 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
-enum JobStatus {
+enum AnalysisRunStatus {
   queued
   running
   succeeded
   failed
+  canceled
 }
 
 model AnalysisRun {
-  id          String    @id @default(cuid())
-  status      JobStatus @default(queued)
-  inputJson   Json
-  resultJson  Json?
-  errorText   String?
-  referenceDatasetId String
-  referenceDataset   ReferenceDataset @relation(fields: [referenceDatasetId], references: [id])
-  startedAt   DateTime?
-  finishedAt  DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id                 String            @id @default(cuid())
+  status             AnalysisRunStatus @default(queued)
 
-  @@index([status, createdAt])
+  referenceDatasetId String
+  referenceDataset   ReferenceDataset  @relation(fields: [referenceDatasetId], references: [id])
+
+  inputJson          Json
+  resultJson         Json?
+  errorMessage       String?
+
+  algorithmVersion   String?
+  modelVersion       String?
+
+  startedAt          DateTime?
+  finishedAt         DateTime?
+
+  lockToken          String?
+  lockedAt           DateTime?
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 }
 
 model ReferenceDataset {
@@ -35,9 +44,11 @@ model ReferenceDataset {
   name        String   // png-modern など
   version     String   // v1, 2026-01-11 など
   description String?
-  csvPath     String   // /data/reference/png-modern/v1/dataset.csv
-  checksum    String?  // SHA256（任意）
+  storageUri  String   // /data/reference/png-modern/v1/dataset.csv
+  isActive    Boolean  @default(true)
+
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   analysisRuns AnalysisRun[]
 

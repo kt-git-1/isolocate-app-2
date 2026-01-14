@@ -75,7 +75,7 @@ def main():
                             UPDATE "AnalysisRun"
                             SET status='succeeded',
                                 "resultJson"=%s,
-                                "errorText"=NULL,
+                                "errorMessage"=NULL,
                                 "updatedAt"=NOW()
                             WHERE id=%s
                             """,
@@ -92,7 +92,7 @@ def main():
                             """
                             UPDATE "AnalysisRun"
                             SET status='failed',
-                                "errorText"=%s,
+                                "errorMessage"=%s,
                                 "updatedAt"=NOW()
                             WHERE id=%s
                             """,
