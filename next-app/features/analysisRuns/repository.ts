@@ -36,3 +36,12 @@ export async function getAnalysisRunById(id: string) {
     include: { referenceDataset: true },
   });
 }
+
+export async function findReferenceDatasetByNameVersion(
+  name: string,
+  version: string
+) {
+  return prisma.referenceDataset.findUnique({
+    where: { name_version: { name, version } },
+  });
+}

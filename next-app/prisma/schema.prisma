@@ -42,7 +42,7 @@ model AnalysisRun {
 model ReferenceDataset {
   id          String   @id @default(cuid())
   name        String   // png-modern など
-  version     String   // v1, 2026-01-11 など
+  version     String   // v1, 2026-01 など
   description String?
   storageUri  String   // /data/reference/png-modern/v1/dataset.csv
   isActive    Boolean  @default(true)

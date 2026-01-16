@@ -29,7 +29,7 @@ export function mapAnalysisRunToResponse(
     },
 
     inputJson: inputJsonSchema.parse(run.inputJson),
-    resultJson: resultJsonSchema.parse(run.resultJson ?? null),
+    resultJson: resultJsonSchema.nullable().parse(run.resultJson),
     errorMessage: run.errorMessage ?? null,
 
     algorithmVersion: run.algorithmVersion ?? null,

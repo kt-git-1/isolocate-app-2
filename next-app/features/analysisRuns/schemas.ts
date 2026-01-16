@@ -1,53 +1,48 @@
 import { z } from "zod";
+import { REFERENCE_SAMPLES } from "./domain/types";
+
+const popGroupSchema = z.enum(["Asian", "Japan", "NEA", "SEA", "UBC", "US"]);
+const classifierSchema = z.enum(["lda", "logit", "rf"]);
+const groupCountSchema = z.enum(["two", "more2"]);
+const stepwiseSchema = z.enum(["none", "forward", "backward"]);
+
+const metadataSchema = z.object({
+  caseNumber: z.string().min(1),
+  analystName: z.string().min(1),
+  elementSampled: z.string().min(1),
+});
+
+const comparisonParametersSchema = z.object({
+  referenceSample: z.enum(REFERENCE_SAMPLES),
+  numberOfGroups: groupCountSchema,
+  classifier: classifierSchema,
+  stepwise: stepwiseSchema,
+  populations: z.array(popGroupSchema),
+});
+
+const isotopeInputsSchema = z.object({
+  collagen: z.object({
+    col13c: z.number(),
+    col15n: z.number(),
+    col34s: z.number(),
+  }),
+  apatite: z.object({
+    a13c: z.number(),
+    a18o: z.number(),
+  }),
+  enamel: z.object({
+    e13c: z.number(),
+    e18o: z.number(),
+  }),
+});
 
 /**
  * UIの入力JSON（inputJson）をバリデーションするZod Schema
- * - 未入力を許す数値は nullable
  */
 export const inputJsonSchema = z.object({
-  meta: z.object({
-    caseNumber: z.string().min(1).optional(),     // ひとまずJSON内で保持
-    analystName: z.string().min(1).optional(),
-    targetElementsLabel: z.string().min(1).optional(),
-  }),
-  parameters: z.object({
-    compareGroupCount: z.enum(["2", "3plus"]).optional(), // UIに合わせて拡張OK
-    classificationMethod: z.enum(["lda", "logistic", "svm"]).optional(),
-    stepwise: z.enum(["none", "forward", "backward", "both"]).optional(),
-    populations: z
-      .array(
-        z.enum([
-          "asia",
-          "japan",
-          "northeast_asia",
-          "southeast_asia",
-          "ubc_vancouver",
-          "america",
-        ])
-      )
-      .default([]),
-  }),
-  measurements: z.object({
-    collagen: z
-      .object({
-        d13C: z.number().nullable().optional(),
-        d15N: z.number().nullable().optional(),
-        d34S: z.number().nullable().optional(),
-      })
-      .optional(),
-    apatite: z
-      .object({
-        d13C: z.number().nullable().optional(),
-        d18O: z.number().nullable().optional(),
-      })
-      .optional(),
-    enamel: z
-      .object({
-        d13C: z.number().nullable().optional(),
-        d18O: z.number().nullable().optional(),
-      })
-      .optional(),
-  }),
+  metadata: metadataSchema,
+  comparison: comparisonParametersSchema,
+  isotopeInputs: isotopeInputsSchema,
 });
 
 export type InputJson = z.infer<typeof inputJsonSchema>;
