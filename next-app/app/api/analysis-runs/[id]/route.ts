@@ -1,12 +1,40 @@
-import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { getAnalysisRunUseCase } from "@/features/analysisRuns/usecases/getAnalysisRunUseCase";
 
-export async function GET(_: Request, { params }: { params: { id: string } }) {
-  const run = await prisma.analysisRun.findUnique({
-    where: { id: params.id },
-    include: { referenceDataset: true },
-  });
+export const dynamic = "force-dynamic";
 
-  if (!run) return NextResponse.json({ error: "not found" }, { status: 404 });
-  return NextResponse.json(run);
+export async function GET(
+  _req: Request,
+  context: { params: { id: string } | Promise<{ id: string }> }
+) {
+  const params = await context.params;
+  const id = params?.id;
+
+  if (!id) {
+    return NextResponse.json(
+      { message: "id is required" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const result = await getAnalysisRunUseCase(id);
+    if (!result) {
+      return NextResponse.json(
+        { message: "Result not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(result, {
+      status: 200,
+      headers: { "Cache-Control": "no-store" },
+    });
+  } catch (e) {
+    console.error(e);
+    return NextResponse.json(
+      { message: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
 }

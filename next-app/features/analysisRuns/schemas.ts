@@ -1,3 +1,4 @@
+// JSONのスキーマ定義
 import { z } from "zod";
 import { REFERENCE_SAMPLES } from "./domain/types";
 

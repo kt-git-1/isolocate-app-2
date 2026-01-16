@@ -1,3 +1,4 @@
+// DTOの定義(APIのRequestとResponse)
 import { z } from "zod";
 import { inputJsonSchema, resultJsonSchema } from "./schemas";
 
@@ -11,12 +12,10 @@ export const createAnalysisRunRequestSchema = z.object({
   modelVersion: z.string().min(1).optional(),
 });
 
-export type CreateAnalysisRunRequest = z.infer<
-  typeof createAnalysisRunRequestSchema
->;
+export type CreateAnalysisRunRequest = z.infer<typeof createAnalysisRunRequestSchema>;
 
 /**
- * APIで返すResponse DTO（DBの生の型をそのまま返さない方針）
+ * APIで返すResponse DTO
  */
 export const analysisRunResponseSchema = z.object({
   id: z.string().cuid(),
