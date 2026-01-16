@@ -3,7 +3,7 @@ import Link from "next/link";
 export function TopNav() {
   // ラベルと遷移先の一覧
   const items = [
-    { label: "入力", href: "/input" },
+    { label: "入力", href: "/analysis/new" },
     { label: "集団定義", href: "/population-definitions" },
     { label: "レポート印刷", href: "/print-report" },
     { label: "相対尤度", href: "/relative-likelihood" },

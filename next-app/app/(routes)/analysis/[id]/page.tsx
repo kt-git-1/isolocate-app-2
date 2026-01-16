@@ -4,6 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { AnalysisRunResponse } from "@/features/analysisRuns/dto";
+import {
+  CLASSIFIER_LABELS,
+  GROUP_COUNT_LABELS,
+  POP_LABELS,
+  STEPWISE_LABELS,
+} from "@/features/analysisRuns/domain/labels";
 
 function prettyJson(value: unknown) {
   try {
@@ -18,6 +24,51 @@ function formatDate(iso?: string | null) {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
   return d.toLocaleString("ja-JP");
+}
+
+function formatValue(value: unknown) {
+  if (value === null || value === undefined) return "—";
+  if (Array.isArray(value)) return value.join(", ");
+  if (typeof value === "boolean") return value ? "true" : "false";
+  return String(value);
+}
+
+function toPopLabel(value: string | undefined) {
+  if (!value) return "—";
+  return POP_LABELS[value as keyof typeof POP_LABELS] ?? value;
+}
+
+function toClassifierLabel(value: string | undefined) {
+  if (!value) return "—";
+  return CLASSIFIER_LABELS[value as keyof typeof CLASSIFIER_LABELS] ?? value;
+}
+
+function toStepwiseLabel(value: string | undefined) {
+  if (!value) return "—";
+  return STEPWISE_LABELS[value as keyof typeof STEPWISE_LABELS] ?? value;
+}
+
+function toGroupCountLabel(value: string | undefined) {
+  if (!value) return "—";
+  return GROUP_COUNT_LABELS[value as keyof typeof GROUP_COUNT_LABELS] ?? value;
+}
+
+function KeyValueGrid({ items }: { items: { label: string; value: unknown }[] }) {
+  if (!items.length) return <p className="text-sm text-zinc-500">データがありません。</p>;
+  return (
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      {items.map((item) => (
+        <div key={item.label} className="rounded-lg border border-zinc-200 p-3">
+          <div className="text-xs text-zinc-500">{item.label}</div>
+          <div className="mt-1 text-sm font-medium">{formatValue(item.value)}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SectionTitle({ children }: { children: string }) {
+  return <h3 className="text-sm font-semibold text-zinc-700">{children}</h3>;
 }
 
 function StatusBadge({ status }: { status: AnalysisRunResponse["status"] }) {
@@ -212,7 +263,7 @@ export default function AnalysisRunPage() {
       <div className="mt-6 grid grid-cols-1 gap-6">
         <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
           <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-base font-semibold">Input</h2>
+            <h2 className="text-base font-semibold">入力データ</h2>
             <button
               className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs hover:bg-zinc-50"
               onClick={async () => {
@@ -227,16 +278,75 @@ export default function AnalysisRunPage() {
 
           {loading && !data ? (
             <p className="text-sm text-zinc-500">読み込み中…</p>
+          ) : data ? (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <SectionTitle>メタ情報</SectionTitle>
+                <KeyValueGrid
+                  items={[
+                    { label: "ケース番号", value: data.inputJson?.metadata?.caseNumber },
+                    { label: "解析者名", value: data.inputJson?.metadata?.analystName },
+                    { label: "分析対象元素", value: data.inputJson?.metadata?.elementSampled },
+                  ]}
+                />
+              </div>
+              <div className="space-y-2">
+                <SectionTitle>比較パラメータ</SectionTitle>
+                <KeyValueGrid
+                  items={[
+                    { label: "参照サンプル", value: data.inputJson?.comparison?.referenceSample },
+                    {
+                      label: "グループ数",
+                      value: toGroupCountLabel(data.inputJson?.comparison?.numberOfGroups),
+                    },
+                    {
+                      label: "分類器",
+                      value: toClassifierLabel(data.inputJson?.comparison?.classifier),
+                    },
+                    {
+                      label: "ステップワイズ",
+                      value: toStepwiseLabel(data.inputJson?.comparison?.stepwise),
+                    },
+                    {
+                      label: "集団",
+                      value: (data.inputJson?.comparison?.populations ?? [])
+                        .map((pop) => toPopLabel(pop))
+                        .join(", "),
+                    },
+                  ]}
+                />
+              </div>
+              <div className="space-y-2">
+                <SectionTitle>同位体入力</SectionTitle>
+                <KeyValueGrid
+                  items={[
+                    { label: "コラーゲン δ13C", value: data.inputJson?.isotopeInputs?.collagen?.col13c },
+                    { label: "コラーゲン δ15N", value: data.inputJson?.isotopeInputs?.collagen?.col15n },
+                    { label: "コラーゲン δ34S", value: data.inputJson?.isotopeInputs?.collagen?.col34s },
+                    { label: "アパタイト δ13C", value: data.inputJson?.isotopeInputs?.apatite?.a13c },
+                    { label: "アパタイト δ18O", value: data.inputJson?.isotopeInputs?.apatite?.a18o },
+                    { label: "エナメル δ13C", value: data.inputJson?.isotopeInputs?.enamel?.e13c },
+                    { label: "エナメル δ18O", value: data.inputJson?.isotopeInputs?.enamel?.e18o },
+                  ]}
+                />
+              </div>
+              <details className="rounded-lg border border-zinc-200 bg-zinc-50 p-3">
+                <summary className="cursor-pointer text-xs font-medium text-zinc-600">
+                  Raw JSON
+                </summary>
+                <pre className="mt-2 max-h-[360px] overflow-auto rounded-xl bg-zinc-950 p-4 text-xs text-zinc-100">
+                  {prettyJson(data.inputJson)}
+                </pre>
+              </details>
+            </div>
           ) : (
-            <pre className="max-h-[520px] overflow-auto rounded-xl bg-zinc-950 p-4 text-xs text-zinc-100">
-              {data ? prettyJson(data.inputJson) : "—"}
-            </pre>
+            <p className="text-sm text-zinc-500">データがありません。</p>
           )}
         </section>
 
         <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
           <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-base font-semibold">Result</h2>
+            <h2 className="text-base font-semibold">解析結果</h2>
             <button
               className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs hover:bg-zinc-50"
               onClick={async () => {
@@ -257,9 +367,124 @@ export default function AnalysisRunPage() {
           ) : null}
 
           {data?.resultJson ? (
-            <pre className="max-h-[520px] overflow-auto rounded-xl bg-zinc-950 p-4 text-xs text-zinc-100">
-              {prettyJson(data.resultJson)}
-            </pre>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <SectionTitle>概要</SectionTitle>
+                <KeyValueGrid
+                  items={[
+                    {
+                      label: "予測グループ",
+                      value: toPopLabel(data.resultJson?.summary?.predictedGroup),
+                    },
+                    { label: "予測ラベル", value: data.resultJson?.summary?.predictedLabel },
+                    { label: "確率", value: data.resultJson?.summary?.probability },
+                    { label: "決定", value: data.resultJson?.summary?.decision },
+                  ]}
+                />
+              </div>
+
+              {Array.isArray(data.resultJson?.scores) && data.resultJson.scores.length > 0 ? (
+                <div className="space-y-2">
+                  <SectionTitle>スコア</SectionTitle>
+                  <div className="overflow-hidden rounded-xl border border-zinc-200">
+                    <table className="w-full text-sm">
+                      <thead className="bg-zinc-50 text-xs text-zinc-500">
+                        <tr>
+                          <th className="px-3 py-2 text-left">グループ</th>
+                          <th className="px-3 py-2 text-left">ラベル</th>
+                          <th className="px-3 py-2 text-right">スコア</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-200">
+                        {data.resultJson.scores.map((score, index) => (
+                          <tr key={`${score.group}-${index}`} className="text-zinc-800">
+                            <td className="px-3 py-2">{toPopLabel(score.group)}</td>
+                            <td className="px-3 py-2">{formatValue(score.label)}</td>
+                            <td className="px-3 py-2 text-right">
+                              {typeof score.score === "number"
+                                ? score.score.toFixed(3)
+                                : formatValue(score.score)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="space-y-2">
+                <SectionTitle>モデル</SectionTitle>
+                <KeyValueGrid
+                  items={[
+                    { label: "分類方法", value: data.resultJson?.model?.classificationMethod },
+                    { label: "ステップワイズ", value: data.resultJson?.model?.stepwise },
+                    { label: "グループ数", value: data.resultJson?.model?.compareGroupCount },
+                    { label: "アルゴリズム", value: data.resultJson?.model?.algorithmVersion },
+                    { label: "モデル", value: data.resultJson?.model?.modelVersion },
+                  ]}
+                />
+              </div>
+
+              {Array.isArray(data.resultJson?.featuresUsed) && data.resultJson.featuresUsed.length > 0 ? (
+                <div className="space-y-2">
+                  <SectionTitle>使用された特徴量</SectionTitle>
+                  <div className="flex flex-wrap gap-2">
+                    {data.resultJson.featuresUsed.map((feature) => (
+                      <span
+                        key={feature}
+                        className="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs text-zinc-700"
+                      >
+                        {feature}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {data.resultJson?.qc ? (
+                <div className="space-y-2">
+                  <SectionTitle>QC</SectionTitle>
+                  <KeyValueGrid
+                    items={[
+                      { label: "有効", value: data.resultJson.qc.isValidForRun },
+                      {
+                        label: "欠損フィールド",
+                        value: (data.resultJson.qc.missingFields ?? []).join(", "),
+                      },
+                      {
+                        label: "警告",
+                        value: (data.resultJson.qc.warnings ?? []).join(", "),
+                      },
+                    ]}
+                  />
+                </div>
+              ) : null}
+
+              {data.resultJson?.artifacts ? (
+                <div className="space-y-2">
+                  <SectionTitle>Artifacts</SectionTitle>
+                  <KeyValueGrid
+                    items={[
+                      {
+                        label: "Plot Paths",
+                        value: (data.resultJson.artifacts.plotPaths ?? []).join(", "),
+                      },
+                      { label: "Raw Output Path", value: data.resultJson.artifacts.rawOutputPath },
+                    ]}
+                  />
+                </div>
+              ) : null}
+
+              <details className="rounded-lg border border-zinc-200 bg-zinc-50 p-3">
+                <summary className="cursor-pointer text-xs font-medium text-zinc-600">
+                  Raw JSON
+                </summary>
+                <pre className="mt-2 max-h-[360px] overflow-auto rounded-xl bg-zinc-950 p-4 text-xs text-zinc-100">
+                  {prettyJson(data.resultJson)}
+                </pre>
+              </details>
+            </div>
           ) : (
             <p className="text-sm text-zinc-500">
               {data?.status === "queued" || data?.status === "running"

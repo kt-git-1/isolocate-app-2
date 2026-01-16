@@ -8,7 +8,7 @@ import type {
   AnalysisInputsForm,
 } from "@/features/analysisRuns/domain/types";
 
-import { createAnalysisRunAction } from "./actions";
+import { createAnalysisRunAction } from "@/app/(routes)/analysis/new/actions";
 
 import { ComparisonSidebar } from "@/components/ComparisonSidebar";
 import { MetadataFields } from "@/components/MetadataFields";

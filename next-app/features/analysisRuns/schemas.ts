@@ -72,8 +72,8 @@ export const resultJsonSchema = z.object({
       classificationMethod: z.string().optional(),
       stepwise: z.string().optional(),
       compareGroupCount: z.string().optional(),
-      algorithmVersion: z.string().optional(),
-      modelVersion: z.string().optional(),
+      algorithmVersion: z.string().nullable().optional(),
+      modelVersion: z.string().nullable().optional(),
     })
     .optional(),
   featuresUsed: z.array(z.string()).optional(),

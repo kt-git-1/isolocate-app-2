@@ -12,20 +12,20 @@ async function main() {
   await prisma.referenceDataset.upsert({
     where: {
       name_version: {
-        name: "modern_png",
+        name: "png-modern",
         version: "2026-01",
       },
     },
     update: {
       isActive: true,
-      storageUri: "/reference_datasets/modern_png/2026-01/dataset.csv",
+      storageUri: "/data/reference/png-modern/2026-01/dataset.csv",
       description: "現代同位体データセット",
     },
     create: {
-      name: "modern_png",
+      name: "png-modern",
       version: "2026-01",
       description: "現代同位体データセット",
-      storageUri: "/reference_datasets/modern_png/2026-01/dataset.csv",
+      storageUri: "/data/reference/png-modern/2026-01/dataset.csv",
       isActive: true,
     },
   });
