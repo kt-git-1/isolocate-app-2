@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { StatusBadge } from "@/components/StatusBadge";
+import { listAnalysisRunsAction } from "./actions";
 
 type AnalysisRunListItem = {
   id: string;
@@ -33,57 +34,19 @@ function formatDate(iso?: string | null) {
   return d.toLocaleString("ja-JP");
 }
 
-function StatusBadge({ status }: { status: AnalysisRunListItem["status"] }) {
-  const cls = useMemo(() => {
-    switch (status) {
-      case "queued":
-        return "bg-zinc-100 text-zinc-800 border-zinc-200";
-      case "running":
-        return "bg-blue-50 text-blue-800 border-blue-200";
-      case "succeeded":
-        return "bg-emerald-50 text-emerald-800 border-emerald-200";
-      case "failed":
-        return "bg-red-50 text-red-800 border-red-200";
-      case "canceled":
-        return "bg-amber-50 text-amber-800 border-amber-200";
-      default:
-        return "bg-zinc-100 text-zinc-800 border-zinc-200";
-    }
-  }, [status]);
-
-  return (
-    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${cls}`}>
-      {status}
-    </span>
-  );
-}
-
 export default function AnalysisListPage() {
-  const router = useRouter();
+  const take = 50;
   const [runs, setRuns] = useState<AnalysisRunListItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const take = 50;
-
-  async function fetchRuns(signal?: AbortSignal) {
+  async function fetchRuns() {
     setError(null);
+    setLoading(true);
     try {
-      const res = await fetch(`/api/analysis-runs?take=${take}`, {
-        method: "GET",
-        cache: "no-store",
-        signal,
-      });
-
-      if (!res.ok) {
-        const text = await res.text().catch(() => "");
-        throw new Error(`API error: ${res.status} ${res.statusText} ${text}`.trim());
-      }
-
-      const json = (await res.json()) as AnalysisRunListItem[];
-      setRuns(Array.isArray(json) ? json : []);
+      const result = await listAnalysisRunsAction(take);
+      setRuns(Array.isArray(result) ? result : []);
     } catch (e: any) {
-      if (e?.name === "AbortError") return;
       setError(e?.message ?? "不明なエラーが発生しました。");
     } finally {
       setLoading(false);
@@ -91,10 +54,7 @@ export default function AnalysisListPage() {
   }
 
   useEffect(() => {
-    const ac = new AbortController();
-    setLoading(true);
-    fetchRuns(ac.signal);
-    return () => ac.abort();
+    fetchRuns();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -109,18 +69,16 @@ export default function AnalysisListPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <button
+          <Link
+            href="/analysis/new"
             className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm hover:bg-zinc-50"
-            onClick={() => router.push("/analysis/new")}
           >
             新規解析
-          </button>
+          </Link>
           <button
+            type="button"
             className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm hover:bg-zinc-50"
-            onClick={() => {
-              setLoading(true);
-              fetchRuns();
-            }}
+            onClick={fetchRuns}
           >
             更新
           </button>

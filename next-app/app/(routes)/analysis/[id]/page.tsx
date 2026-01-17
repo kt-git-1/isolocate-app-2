@@ -7,6 +7,7 @@ import { AnalysisRunResponse } from "@/features/analysisRuns/dto";
 import { AnalysisRunInputSection } from "@/components/AnalysisRunInputSection";
 import { AnalysisRunResultSection } from "@/components/AnalysisRunResultSection";
 import { AnalysisRunSummaryCard } from "@/components/AnalysisRunSummaryCard";
+import { getAnalysisRunAction } from "./actions";
 
 export default function AnalysisRunPage() {
   const params = useParams<{ id: string }>();
@@ -19,33 +20,21 @@ export default function AnalysisRunPage() {
   const [err, setErr] = useState<string | null>(null);
   const [polling, setPolling] = useState<boolean>(true);
 
-  async function fetchRun(signal?: AbortSignal) {
+  async function fetchRun() {
     if (!id) return;
     setErr(null);
 
     try {
-      const res = await fetch(`/api/analysis-runs/${encodeURIComponent(id)}`, {
-        method: "GET",
-        cache: "no-store",
-        signal,
-      });
-
-      if (res.status === 404) {
+      const result = await getAnalysisRunAction(id);
+      if (!result) {
         setErr("指定された解析IDが見つかりませんでした。");
         setData(null);
         return;
       }
-
-      if (!res.ok) {
-        const text = await res.text().catch(() => "");
-        throw new Error(`API error: ${res.status} ${res.statusText} ${text}`.trim());
-      }
-
-      const json = (await res.json()) as AnalysisRunResponse;
-      setData(json);
+      setData(result);
 
       // 終了したらポーリング停止
-      if (json.status === "succeeded" || json.status === "failed") {
+      if (result.status === "succeeded" || result.status === "failed") {
         setPolling(false);
       }
     } catch (e: any) {
@@ -58,10 +47,8 @@ export default function AnalysisRunPage() {
 
   // 初回ロード
   useEffect(() => {
-    const ac = new AbortController();
     setLoading(true);
-    fetchRun(ac.signal);
-    return () => ac.abort();
+    fetchRun();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -70,13 +57,11 @@ export default function AnalysisRunPage() {
     if (!id) return;
     if (!polling) return;
 
-    const ac = new AbortController();
     const timer = setInterval(() => {
-      fetchRun(ac.signal);
+      fetchRun();
     }, 2000);
 
     return () => {
-      ac.abort();
       clearInterval(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

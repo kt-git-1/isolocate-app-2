@@ -5,7 +5,7 @@ const statusStyles: Record<AnalysisRunResponse["status"] | "default", string> = 
   running: "bg-blue-50 text-blue-800 border-blue-200",
   succeeded: "bg-emerald-50 text-emerald-800 border-emerald-200",
   failed: "bg-red-50 text-red-800 border-red-200",
-  canceled: "bg-gray-50 text-gray-800 border-gray-200",
+  canceled: "bg-amber-50 text-amber-800 border-amber-200",
   default: "bg-zinc-100 text-zinc-800 border-zinc-200",
 };
 

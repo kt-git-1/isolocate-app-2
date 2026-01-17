@@ -1,31 +1,26 @@
-import { prisma } from "@/lib/prisma";
+import { createAnalysisRunRequestSchema } from "@/features/analysisRuns/dto";
+import { createAnalysisRunFromRequestUseCase } from "@/features/analysisRuns/usecases/createAnalysisRunFromRequestUseCase";
+import { listAnalysisRunsUseCase } from "@/features/analysisRuns/usecases/listAnalysisRunsUseCase";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   const body = await req.json();
+  const parsed = createAnalysisRunRequestSchema.safeParse(body);
 
-  // body例:
-  // {
-  //   "referenceDatasetId": "...",
-  //   "inputJson": { ...UI入力... },
-  //   "algorithmVersion": "lda_v1",
-  //   "modelVersion": "modern_png_2026-01"
-  // }
-
-  const { referenceDatasetId, inputJson, algorithmVersion, modelVersion } = body ?? {};
-
-  if (!referenceDatasetId || !inputJson) {
-    return NextResponse.json({ error: "referenceDatasetId と inputJson は必須です" }, { status: 400 });
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "リクエスト形式が不正です", details: parsed.error.format() },
+      { status: 400 }
+    );
   }
 
-  const run = await prisma.analysisRun.create({
-    data: {
-      referenceDatasetId,
-      inputJson,
-      algorithmVersion: algorithmVersion ?? null,
-      modelVersion: modelVersion ?? null,
-      status: "queued",
-    },
+  const { referenceDatasetId, inputJson, algorithmVersion, modelVersion } = parsed.data;
+
+  const run = await createAnalysisRunFromRequestUseCase({
+    referenceDatasetId,
+    inputJson,
+    algorithmVersion,
+    modelVersion,
   });
 
   return NextResponse.json(run, { status: 201 });
@@ -35,13 +30,7 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const take = Math.min(Number(searchParams.get("take") ?? "20"), 100);
 
-  const runs = await prisma.analysisRun.findMany({
-    orderBy: { createdAt: "desc" },
-    take,
-    include: {
-      referenceDataset: true,
-    },
-  });
+  const runs = await listAnalysisRunsUseCase(take);
 
   return NextResponse.json(runs);
 }
