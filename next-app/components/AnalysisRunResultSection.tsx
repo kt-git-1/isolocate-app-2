@@ -1,8 +1,8 @@
 import { AnalysisRunResponse } from "@/features/analysisRuns/dto";
 
-import { formatValue, prettyJson, toPopLabel } from "./analysisRunFormatters";
-import { KeyValueGrid } from "./KeyValueGrid";
-import { SectionTitle } from "./SectionTitle";
+import { formatValue, prettyJson, toPopLabel } from "@/features/analysisRuns/analysisRunFormatters";
+import { KeyValueGrid } from "@/components/KeyValueGrid";
+import { SectionTitle } from "@/components/SectionTitle";
 
 type Props = {
   data: AnalysisRunResponse | null;

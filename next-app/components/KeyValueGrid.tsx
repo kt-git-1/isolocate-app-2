@@ -1,4 +1,4 @@
-import { formatValue } from "./analysisRunFormatters";
+import { formatValue } from "@/features/analysisRuns/analysisRunFormatters";
 
 type KeyValueItem = { label: string; value: unknown };
 

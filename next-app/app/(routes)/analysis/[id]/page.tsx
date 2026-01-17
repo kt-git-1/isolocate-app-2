@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { AnalysisRunResponse } from "@/features/analysisRuns/dto";
-import { AnalysisRunInputSection } from "./components/AnalysisRunInputSection";
-import { AnalysisRunResultSection } from "./components/AnalysisRunResultSection";
-import { AnalysisRunSummaryCard } from "./components/AnalysisRunSummaryCard";
+import { AnalysisRunInputSection } from "@/components/AnalysisRunInputSection";
+import { AnalysisRunResultSection } from "@/components/AnalysisRunResultSection";
+import { AnalysisRunSummaryCard } from "@/components/AnalysisRunSummaryCard";
 
 export default function AnalysisRunPage() {
   const params = useParams<{ id: string }>();

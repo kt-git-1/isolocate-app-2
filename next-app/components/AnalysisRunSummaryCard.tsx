@@ -1,7 +1,7 @@
 import { AnalysisRunResponse } from "@/features/analysisRuns/dto";
 
-import { formatDate } from "./analysisRunFormatters";
-import { StatusBadge } from "./StatusBadge";
+import { formatDate } from "@/features/analysisRuns/analysisRunFormatters";
+import { StatusBadge } from "@/components/StatusBadge";
 
 type Props = {
   data: AnalysisRunResponse | null;

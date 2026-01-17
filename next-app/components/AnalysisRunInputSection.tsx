@@ -6,9 +6,9 @@ import {
   toGroupCountLabel,
   toPopLabel,
   toStepwiseLabel,
-} from "./analysisRunFormatters";
-import { KeyValueGrid } from "./KeyValueGrid";
-import { SectionTitle } from "./SectionTitle";
+} from "@/features/analysisRuns/analysisRunFormatters";
+import { KeyValueGrid } from "@/components/KeyValueGrid";
+import { SectionTitle } from "@/components/SectionTitle";
 
 type Props = {
   data: AnalysisRunResponse | null;
